@@ -9,7 +9,7 @@ public interface UserService {
 
     List<UserDist> list();
 
-    Optional<UserDist> byId(Long id);
+    Optional<UserDist> getbyId(Long id);
 
     UserDist save(UserDist userDist);
 

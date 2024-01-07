@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -23,26 +24,7 @@ public class UserController extends CommonController {
     @Autowired
     private UserServiceImp userServiceImp;
 
-    @RequestMapping(path = "/allUsers",method = RequestMethod.GET)
-    public ResponseEntity<GenericResponseDTO<?>> listUsers(){
-        try {
-
-            if(!userServiceImp.list().isEmpty()){
-                return ResponseEntity.ok(new GenericResponseDTO<>(SUCCESS, HTTP_SUCCESS, null,
-                        null, "No se obtuvo información de los usuario", null));
-            }
-            return ResponseEntity.ok(new GenericResponseDTO<>(SUCCESS,HTTP_SUCCESS,null,
-                    null,"servicio ejecutado exitosamente",userServiceImp.list()));
-        }catch (Exception e){
-            log.warn(e.getMessage());
-            return new ResponseEntity<>(new GenericResponseDTO<>(ERROR,HTTP_APP_FAILURE,null,
-                    e.getMessage(),null,null), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        /*return ResponseEntity.ok(new GenericResponseDTO<>(SUCCESS, HTTP_SUCCESS, null,
-                null, "No se obtuvo información del usuario", null));*/
-    }
-
-    @RequestMapping(path = "/{id}")
+    /*@RequestMapping(path = "/{id}")
     public ResponseEntity<GenericResponseDTO<?>> showUser(@PathVariable Long id){
         try {
             if(userServiceImp.byId(id).isPresent()){
@@ -56,25 +38,55 @@ public class UserController extends CommonController {
             return new ResponseEntity<>(new GenericResponseDTO<>(ERROR,HTTP_APP_FAILURE,null,
                     e.getMessage(),null,null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
+    }*/
 
-    @RequestMapping(path = "/newUser",method = RequestMethod.POST)
-    public ResponseEntity<GenericResponseDTO<?>> saveUser(@RequestBody UserDist userDist){
+    /*@RequestMapping(path = "/newUser",method = RequestMethod.POST)
+    public ResponseEntity<GenericResponseDTO<UserDist>> saveUser(@RequestBody UserDist userDist){
         try {
-            userServiceImp.save(userDist);
+            UserDist dist = userServiceImp.save(userDist);
             return ResponseEntity.ok(new GenericResponseDTO<>(SUCCESS,HTTP_SUCCESS,null,
-                    null,"Successfully created user",null));
+                    null,"Successfully created user",dist));
         }catch (Exception e){
             log.warn(e.getMessage(), e);
             return new ResponseEntity<>(new GenericResponseDTO<>(ERROR, HTTP_APP_FAILURE, null,
                     e.getMessage(), null, null), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }*/
+
+    @RequestMapping(path = "/findUser/{id}",method = RequestMethod.GET)
+    public ResponseEntity<Optional<UserDist>> getUser(@PathVariable Long id){
+        try {
+            return new ResponseEntity<>(userServiceImp.getbyId(id),HttpStatus.INTERNAL_SERVER_ERROR);
+        }catch (Exception e){
+            log.error("UserController -> findUser: "+e.getMessage());
+            return null;
+        }
+    }
+
+    @RequestMapping(path = "/createUser",method = RequestMethod.POST)
+    public ResponseEntity<UserDist> createUser(@RequestBody UserDist userDist){
+        try{
+            return new ResponseEntity<>(userServiceImp.save(userDist),HttpStatus.CREATED);
+        }catch (Exception e){
+            log.info("UserController -> createUSer: " + e.getMessage());
+            return null;
+        }
+    }
+
+
+    @RequestMapping(path = "/listUsers",method = RequestMethod.GET)
+    public ResponseEntity<List<UserDist>> listUsers(){
+        try {
+            return new ResponseEntity(userServiceImp.list(),HttpStatus.OK);
+        }catch (Exception e){
+            return null;
         }
     }
 
     @RequestMapping(path = "/updateUser/{id}", method = RequestMethod.PUT)
     public ResponseEntity<GenericResponseDTO<?>> updateUser(@RequestBody UserDist userDist, @PathVariable Long id){
         try {
-            Optional<UserDist> user1 = userServiceImp.byId(id);
+            Optional<UserDist> user1 = userServiceImp.getbyId(id);
             if(user1.isPresent()){
                 UserDist userDist2 = user1.get();
                 userDist2.setFirstName(userDist.getFirstName());
@@ -99,7 +111,7 @@ public class UserController extends CommonController {
     @RequestMapping(path = "/deleteUser/{id}",method = RequestMethod.DELETE)
     public ResponseEntity<GenericResponseDTO<?>> deleteUser(@PathVariable Long id){
         try {
-            Optional<UserDist> user = userServiceImp.byId(id);
+            Optional<UserDist> user = userServiceImp.getbyId(id);
             if(user.isPresent()){
                 userServiceImp.delete(id);
                 return ResponseEntity.ok(new GenericResponseDTO<>(SUCCESS,HTTP_NOT_CONTENT,null,

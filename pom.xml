@@ -26,6 +26,7 @@
   <modules>
     <module>ms-administracion</module>
     <module>ms-archivos</module>
+    <module>ms-gateway</module>
   </modules>
 
 </project>

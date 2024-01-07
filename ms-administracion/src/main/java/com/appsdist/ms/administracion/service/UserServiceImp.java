@@ -22,7 +22,7 @@ public class UserServiceImp implements UserService{
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<UserDist> byId(Long id) {
+    public Optional<UserDist> getbyId(Long id) {
         return userRepository.findById(id);
     }
 

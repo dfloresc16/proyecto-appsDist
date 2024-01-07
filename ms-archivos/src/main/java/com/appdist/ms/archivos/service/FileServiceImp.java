@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 public class FileServiceImp implements FileService{
@@ -38,12 +39,15 @@ public class FileServiceImp implements FileService{
     @Override
     public void saveFile(MultipartFile file) throws IOException {
         String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+        String[] name = fileName.split("."); // 1.png
+        Random random = new Random();
+        int numeroEntero = random.nextInt();
         try {
             String filePath = path + File.separator + fileName;
             file.transferTo(new File(filePath));
             FileDist fileDist = new FileDist();
             fileDist.setFilePath(filePath);
-            fileDist.setFileName(fileName);
+            fileDist.setFileName(String.valueOf(numeroEntero)+"."+name[0]);
             fileDist.setType(file.getContentType());
             fileRepository.save(fileDist);
         }catch (Exception e){
