@@ -9,19 +9,32 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
+
 
 @RestController
 @Slf4j
@@ -72,20 +85,26 @@ public class FileController extends CommonController{
         }
     }
 
-    @RequestMapping("/download/{id}")
-    public ResponseEntity<GenericResponseDTO<?>> descargarArchivo(@PathVariable Long id) throws IOException {
+    @RequestMapping(value = "/download/{id}",method = RequestMethod.GET)
+    public ResponseEntity<Resource> downloadFile(@PathVariable("id") Long id) {
         try {
-            Optional<FileDist> file1 = fileServiceImp.byId(id);
-            if(file1.isPresent()){
-                return ResponseEntity.ok(new GenericResponseDTO<>(SUCCESS,HTTP_SUCCESS,null,
-                        null,"servicio ejecutado exitosamente",file1.get().getFilePath()));
-            }
-            return ResponseEntity.ok(new GenericResponseDTO<>(SUCCESS,HTTP_SUCCESS,null,
-                    null,"No se encontro el archivo solicitado",null));
-        }catch (Exception e){
-            log.warn(e.getMessage());
-            return new ResponseEntity<>(new GenericResponseDTO<>(ERROR,HTTP_APP_FAILURE,null,
-                    e.getMessage(),null,null), HttpStatus.INTERNAL_SERVER_ERROR);
+            // Recuperar el nombre del archivo basándose en el ID (deberías implementar este método en tu servicio)
+            String fileName = fileServiceImp.getFileNameById(id);
+
+            // Cargar el archivo como recurso
+            Resource resource = fileServiceImp.loadFileAsResource(fileName);
+
+            // Determinar el tipo MIME del archivo
+            String contentType = fileServiceImp.detectContentType(resource.getFile());
+
+            // Devolver la respuesta con el archivo adjunto
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+        } catch (IOException e) {
+            // Manejar el caso en el que el archivo no se encuentra
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 
